@@ -1,4 +1,5 @@
 
+from contextlib import contextmanager
 from datetime import datetime
 import numpy as np
 import cv2
@@ -7,31 +8,39 @@ import dlib
 
 def monitor_heart_rate():
 
-    cap = cv2.VideoCapture(0)
-    face_detector = dlib.get_frontal_face_detector()
-    landmarks_predictor = dlib.shape_predictor(
-        "models/face/shape_predictor_5_face_landmarks.dat")
-    face_size = 160
+    with open_webcam() as webcam:
+        face_detector = dlib.get_frontal_face_detector()
+        landmarks_predictor = dlib.shape_predictor(
+            "models/face/shape_predictor_5_face_landmarks.dat")
+        face_size = 160
 
-    exit_requested = False
-    while not exit_requested:
-        rgb_frame = capture_frame(cap)
-        gray_frame = rgb_to_gray(rgb_frame)
-        detected_faces = face_detector(gray_frame, 1)
+        exit_requested = False
+        while not exit_requested:
+            rgb_frame = capture_frame(webcam)
+            gray_frame = rgb_to_gray(rgb_frame)
+            detected_faces = face_detector(gray_frame, 1)
 
-        if detected_faces:
-            face = detected_faces[0]
-            aligned_face = align_face(
-                face, gray_frame, rgb_frame, landmarks_predictor, face_size)
+            if detected_faces:
+                face = detected_faces[0]
+                aligned_face = align_face(
+                    face, gray_frame, rgb_frame, landmarks_predictor, face_size)
 
-            rgb_frame = draw_rectangle_around_face(rgb_frame, face)
-            rgb_frame = overlay_aligned_face(rgb_frame, aligned_face)
+                rgb_frame = draw_rectangle_around_face(rgb_frame, face)
+                rgb_frame = overlay_aligned_face(rgb_frame, aligned_face)
 
-        refresh_display(rgb_frame)
+            refresh_display(rgb_frame)
 
-        exit_requested = detect_q_key_pressed()
+            exit_requested = detect_q_key_pressed()
 
-    release_resources(cap)
+
+@contextmanager
+def open_webcam():
+    try:
+        webcam = cv2.VideoCapture(0)
+        yield webcam
+    finally:
+        webcam.release()
+        cv2.destroyAllWindows()
 
 
 def capture_frame(capture):
@@ -79,11 +88,6 @@ def refresh_display(rgb_frame):
 
 def detect_q_key_pressed():
     return cv2.waitKey(1) & 0xFF == ord('q')
-
-
-def release_resources(capture):
-    capture.release()
-    cv2.destroyAllWindows()
 
 
 def timestamp(name):
