@@ -12,4 +12,9 @@ Vision-based Heart Rate Monitoring
 |Center Face|?x?x3|Rotate and translate face using landmarks in order to have always the same skin pixel at roughly the same position|
 |Resize Face|32x32x3|Resize (downscale or upscale) to have fixed input size for the neural network|
 
-### 
+### Real-time loop
+
+|Step|Duration|Description|
+|----|--------|-----------|
+|Acquisition|Enough time to capture a few heartbeats|Frame-by-frame recording of the image w/o any processing to have the highest FPS as possible|
+|Sequence processing|TBD|Sequence processing to estimate heart-rate value|
