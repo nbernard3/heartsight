@@ -140,9 +140,7 @@ def record_sample(facebox_width=128):
 
     return {
         'frames': np.stack(face_frames_buffer),
-        'time':  np.linspace(0,
-                             recording_end_time - recording_start_time,
-                             num=len(face_frames_buffer))
+        'fps':  np.float(len(face_frames_buffer))/(recording_end_time - recording_start_time)
     }
 
 
