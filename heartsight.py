@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import cv2
 import dlib
+import time
 
 
 def monitor_heart_rate():
@@ -31,6 +32,17 @@ def monitor_heart_rate():
             refresh_display(rgb_frame)
 
             exit_requested = detect_q_key_pressed()
+
+
+def create_face_detector():
+
+    frontal_face_detector = dlib.get_frontal_face_detector()
+
+    def face_detector(rgb_frame):
+        gray_frame = rgb_to_gray(rgb_frame)
+        return frontal_face_detector(gray_frame, 1)
+
+    return face_detector
 
 
 @contextmanager
@@ -93,6 +105,45 @@ def detect_q_key_pressed():
 def timestamp(name):
     return "%s_%s" \
         % (datetime.now().strftime('%Y-%m-%dT%H-%M-%S'), name)
+
+
+def record_sample(facebox_width=128):
+    face_frames_buffer = []
+    face_detector = create_face_detector()
+
+    with open_webcam() as webcam:
+
+        exit_requested = False
+        previous_face_rectangle = None
+        recording_start_time = None
+
+        while not exit_requested:
+
+            rgb_frame = capture_frame(webcam)
+            detected_faces = face_detector(rgb_frame)
+            face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
+
+            if face_rectangle:
+                x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
+                face_frame = cv2.resize(
+                    rgb_frame[y:y+h, x:x+w], (facebox_width, facebox_width))
+                refresh_display(face_frame)
+                face_frames_buffer.append(face_frame)
+                previous_face_rectangle = face_rectangle
+
+                if not recording_start_time:
+                    recording_start_time = time.time()
+
+            exit_requested = detect_q_key_pressed()
+
+        recording_end_time = time.time()
+
+    return {
+        'frames': np.stack(face_frames_buffer),
+        'time':  np.linspace(0,
+                             recording_end_time - recording_start_time,
+                             num=len(face_frames_buffer))
+    }
 
 
 if __name__ == '__main__':
