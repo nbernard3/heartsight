@@ -1,4 +1,3 @@
-
 from contextlib import contextmanager
 from datetime import datetime
 import numpy as np
@@ -9,7 +8,7 @@ import time
 
 def record_sample():
 
-    with open_webcam() as webcam:
+    with open_video_resource() as webcam:
 
         frames_buffer = []
         exit_requested = False
@@ -31,22 +30,39 @@ def record_sample():
 
 
 @contextmanager
-def open_webcam():
+def open_video_resource(source=0):
     try:
-        webcam = cv2.VideoCapture(0)
-        yield webcam
+        resource = cv2.VideoCapture(source)
+        yield resource
     finally:
-        webcam.release()
+        resource.release()
         cv2.destroyAllWindows()
 
 
-def capture_frame(capture):
-    _, frame = capture.read()
+def capture_frame(source):
+    _, frame = source.read()
     return frame
 
 
 def detect_q_key_pressed():
     return cv2.waitKey(1) & 0xFF == ord('q')
+
+
+def read_video_file(filepath):
+
+    with open_video_resource(source=filepath) as video:
+        frames_buffer = []
+        fps = video.get(cv2.CAP_PROP_FPS)
+
+        while video.isOpened():
+            rgb_frame = capture_frame(video)
+            frames_buffer.append(rgb_frame)
+
+    return {
+        'frames': np.stack(frames_buffer),
+        'fps':  fps
+    }
+
 
 
 def extract_face_frames(frames, facebox_width=128):
@@ -86,7 +102,7 @@ def rgb_to_gray(frame):
 
 def monitor_heart_rate():
 
-    with open_webcam() as webcam:
+    with open_video_resource() as webcam:
         face_detector = dlib.get_frontal_face_detector()
         landmarks_predictor = dlib.shape_predictor(
             "models/face/shape_predictor_5_face_landmarks.dat")
