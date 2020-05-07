@@ -107,41 +107,46 @@ def timestamp(name):
         % (datetime.now().strftime('%Y-%m-%dT%H-%M-%S'), name)
 
 
-def record_sample(facebox_width=128):
-    face_frames_buffer = []
-    face_detector = create_face_detector()
+def record_sample():
 
     with open_webcam() as webcam:
 
+        frames_buffer = []
         exit_requested = False
-        previous_face_rectangle = None
-        recording_start_time = None
+        recording_start_time = time.time()
 
         while not exit_requested:
 
             rgb_frame = capture_frame(webcam)
-            detected_faces = face_detector(rgb_frame)
-            face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
-
-            if face_rectangle:
-                x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
-                face_frame = cv2.resize(
-                    rgb_frame[y:y+h, x:x+w], (facebox_width, facebox_width))
-                refresh_display(face_frame)
-                face_frames_buffer.append(face_frame)
-                previous_face_rectangle = face_rectangle
-
-                if not recording_start_time:
-                    recording_start_time = time.time()
-
+            frames_buffer.append(rgb_frame)
             exit_requested = detect_q_key_pressed()
 
         recording_end_time = time.time()
 
     return {
-        'frames': np.stack(face_frames_buffer),
-        'fps':  np.float(len(face_frames_buffer))/(recording_end_time - recording_start_time)
+        'frames': np.stack(frames_buffer),
+        'fps':  np.float(len(frames_buffer))/(recording_end_time - recording_start_time)
     }
+
+
+def extract_face_frames(frames, facebox_width=128):
+
+    face_frames_buffer = []
+    face_detector = create_face_detector()
+    previous_face_rectangle = None
+
+    for frame in frames:
+        detected_faces = face_detector(frame)
+        face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
+
+        if face_rectangle:
+            x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
+            face_frame = cv2.resize(
+                frame[y:y+h, x:x+w], (facebox_width, facebox_width))
+            face_frames_buffer.append(face_frame)
+            previous_face_rectangle = face_rectangle
+
+    return np.stack(face_frames_buffer)
 
 
 if __name__ == '__main__':
