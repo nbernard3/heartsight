@@ -19,6 +19,7 @@ def record_sample():
 
             rgb_frame = capture_frame(webcam)
             frames_buffer.append(rgb_frame)
+            refresh_display(rgb_frame)
             exit_requested = detect_q_key_pressed()
 
         recording_end_time = time.time()
@@ -59,13 +60,13 @@ def extract_face_frames(frames, facebox_width=128):
         face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
 
         if face_rectangle:
-            x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
-            face_frame = cv2.resize(
-                frame[y:y+h, x:x+w], (facebox_width, facebox_width))
+            face_frame = dlib.resize_image(
+                dlib.sub_image(frame, face_rectangle), facebox_width, facebox_width)
             face_frames_buffer.append(face_frame)
             previous_face_rectangle = face_rectangle
 
-    return np.stack(face_frames_buffer)
+    face_frames = np.stack(face_frames_buffer) if face_frames_buffer else None
+    return face_frames
 
 
 def dlib_rectangle_to_xywh(rect):
