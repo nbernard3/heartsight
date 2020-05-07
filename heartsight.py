@@ -7,6 +7,93 @@ import dlib
 import time
 
 
+def record_sample():
+
+    with open_webcam() as webcam:
+
+        frames_buffer = []
+        exit_requested = False
+        recording_start_time = time.time()
+
+        while not exit_requested:
+
+            rgb_frame = capture_frame(webcam)
+            frames_buffer.append(rgb_frame)
+            exit_requested = detect_q_key_pressed()
+
+        recording_end_time = time.time()
+
+    return {
+        'frames': np.stack(frames_buffer),
+        'fps':  np.float(len(frames_buffer))/(recording_end_time - recording_start_time)
+    }
+
+
+@contextmanager
+def open_webcam():
+    try:
+        webcam = cv2.VideoCapture(0)
+        yield webcam
+    finally:
+        webcam.release()
+        cv2.destroyAllWindows()
+
+
+def capture_frame(capture):
+    _, frame = capture.read()
+    return frame
+
+
+def detect_q_key_pressed():
+    return cv2.waitKey(1) & 0xFF == ord('q')
+
+
+def extract_face_frames(frames, facebox_width=128):
+
+    face_frames_buffer = []
+    face_detector = create_face_detector()
+    previous_face_rectangle = None
+
+    for frame in frames:
+        detected_faces = face_detector(frame)
+        face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
+
+        if face_rectangle:
+            x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
+            face_frame = cv2.resize(
+                frame[y:y+h, x:x+w], (facebox_width, facebox_width))
+            face_frames_buffer.append(face_frame)
+            previous_face_rectangle = face_rectangle
+
+    return np.stack(face_frames_buffer)
+
+
+def dlib_rectangle_to_xywh(rect):
+    # take a bounding predicted by dlib and convert it
+    # to the format (x, y, w, h) as we would normally do
+    # with OpenCV
+    x = rect.left()
+    y = rect.top()
+    w = rect.right() - x
+    h = rect.bottom() - y
+    return (x, y, w, h)
+
+
+def create_face_detector():
+
+    frontal_face_detector = dlib.get_frontal_face_detector()
+
+    def face_detector(rgb_frame):
+        gray_frame = rgb_to_gray(rgb_frame)
+        return frontal_face_detector(gray_frame, 1)
+
+    return face_detector
+
+
+def rgb_to_gray(frame):
+    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
 def monitor_heart_rate():
 
     with open_webcam() as webcam:
@@ -34,36 +121,6 @@ def monitor_heart_rate():
             exit_requested = detect_q_key_pressed()
 
 
-def create_face_detector():
-
-    frontal_face_detector = dlib.get_frontal_face_detector()
-
-    def face_detector(rgb_frame):
-        gray_frame = rgb_to_gray(rgb_frame)
-        return frontal_face_detector(gray_frame, 1)
-
-    return face_detector
-
-
-@contextmanager
-def open_webcam():
-    try:
-        webcam = cv2.VideoCapture(0)
-        yield webcam
-    finally:
-        webcam.release()
-        cv2.destroyAllWindows()
-
-
-def capture_frame(capture):
-    _, frame = capture.read()
-    return frame
-
-
-def rgb_to_gray(frame):
-    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-
 def align_face(face, gray_frame, rgb_frame, landmarks_predictor, face_size):
     landmarks = landmarks_predictor(gray_frame, face)
     return dlib.get_face_chip(rgb_frame, landmarks, size=face_size)
@@ -73,17 +130,6 @@ def draw_rectangle_around_face(rgb_frame, face):
     x, y, w, h = dlib_rectangle_to_xywh(face)
     cv2.rectangle(rgb_frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
     return rgb_frame
-
-
-def dlib_rectangle_to_xywh(rect):
-    # take a bounding predicted by dlib and convert it
-    # to the format (x, y, w, h) as we would normally do
-    # with OpenCV
-    x = rect.left()
-    y = rect.top()
-    w = rect.right() - x
-    h = rect.bottom() - y
-    return (x, y, w, h)
 
 
 def overlay_aligned_face(rgb_frame, aligned_face):
@@ -98,56 +144,10 @@ def refresh_display(rgb_frame):
     cv2.imshow('frame', rgb_frame)
 
 
-def detect_q_key_pressed():
-    return cv2.waitKey(1) & 0xFF == ord('q')
-
-
 def timestamp(name):
     return "%s_%s" \
         % (datetime.now().strftime('%Y-%m-%dT%H-%M-%S'), name)
 
 
-def record_sample():
-
-    with open_webcam() as webcam:
-
-        frames_buffer = []
-        exit_requested = False
-        recording_start_time = time.time()
-
-        while not exit_requested:
-
-            rgb_frame = capture_frame(webcam)
-            frames_buffer.append(rgb_frame)
-            exit_requested = detect_q_key_pressed()
-
-        recording_end_time = time.time()
-
-    return {
-        'frames': np.stack(frames_buffer),
-        'fps':  np.float(len(frames_buffer))/(recording_end_time - recording_start_time)
-    }
-
-
-def extract_face_frames(frames, facebox_width=128):
-
-    face_frames_buffer = []
-    face_detector = create_face_detector()
-    previous_face_rectangle = None
-
-    for frame in frames:
-        detected_faces = face_detector(frame)
-        face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
-
-        if face_rectangle:
-            x, y, w, h = dlib_rectangle_to_xywh(face_rectangle)
-            face_frame = cv2.resize(
-                frame[y:y+h, x:x+w], (facebox_width, facebox_width))
-            face_frames_buffer.append(face_frame)
-            previous_face_rectangle = face_rectangle
-
-    return np.stack(face_frames_buffer)
-
-
 if __name__ == '__main__':
-    monitor_heart_rate()
+    pass
