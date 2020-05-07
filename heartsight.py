@@ -69,17 +69,6 @@ def extract_face_frames(frames, facebox_width=128):
     return face_frames
 
 
-def dlib_rectangle_to_xywh(rect):
-    # take a bounding predicted by dlib and convert it
-    # to the format (x, y, w, h) as we would normally do
-    # with OpenCV
-    x = rect.left()
-    y = rect.top()
-    w = rect.right() - x
-    h = rect.bottom() - y
-    return (x, y, w, h)
-
-
 def create_face_detector():
 
     frontal_face_detector = dlib.get_frontal_face_detector()
@@ -131,6 +120,17 @@ def draw_rectangle_around_face(rgb_frame, face):
     x, y, w, h = dlib_rectangle_to_xywh(face)
     cv2.rectangle(rgb_frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
     return rgb_frame
+
+
+def dlib_rectangle_to_xywh(rect):
+    # take a bounding predicted by dlib and convert it
+    # to the format (x, y, w, h) as we would normally do
+    # with OpenCV
+    x = rect.left()
+    y = rect.top()
+    w = rect.right() - x
+    h = rect.bottom() - y
+    return (x, y, w, h)
 
 
 def overlay_aligned_face(rgb_frame, aligned_face):
