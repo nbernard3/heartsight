@@ -31,6 +31,7 @@ def record_sample():
 
 @contextmanager
 def open_video_resource(source=0):
+
     try:
         resource = cv2.VideoCapture(source)
         yield resource
@@ -62,7 +63,6 @@ def read_video_file(filepath):
         'frames': np.stack(frames_buffer),
         'fps':  fps
     }
-
 
 
 def extract_face_frames(frames, facebox_width=128):
@@ -128,11 +128,13 @@ def monitor_heart_rate():
 
 
 def align_face(face, gray_frame, rgb_frame, landmarks_predictor, face_size):
+
     landmarks = landmarks_predictor(gray_frame, face)
     return dlib.get_face_chip(rgb_frame, landmarks, size=face_size)
 
 
 def draw_rectangle_around_face(rgb_frame, face):
+
     x, y, w, h = dlib_rectangle_to_xywh(face)
     cv2.rectangle(rgb_frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
     return rgb_frame
@@ -142,6 +144,7 @@ def dlib_rectangle_to_xywh(rect):
     # take a bounding predicted by dlib and convert it
     # to the format (x, y, w, h) as we would normally do
     # with OpenCV
+
     x = rect.left()
     y = rect.top()
     w = rect.right() - x
@@ -150,6 +153,7 @@ def dlib_rectangle_to_xywh(rect):
 
 
 def overlay_aligned_face(rgb_frame, aligned_face):
+
     offset = 10
     shape = aligned_face.shape
     rgb_frame[offset:offset+shape[0],
