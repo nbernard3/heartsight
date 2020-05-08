@@ -49,15 +49,17 @@ def detect_q_key_pressed():
     return cv2.waitKey(1) & 0xFF == ord('q')
 
 
-def read_video_file(filepath):
+def read_video_file(filepath, max_frames_nb=10000):
 
     with open_video_resource(source=filepath) as video:
         frames_buffer = []
         fps = video.get(cv2.CAP_PROP_FPS)
+        frames_nb = 0
 
-        while video.isOpened():
+        while video.isOpened() and frames_nb < max_frames_nb:
             rgb_frame = capture_frame(video)
             frames_buffer.append(rgb_frame)
+            frames_nb += 1
 
     return {
         'frames': np.stack(frames_buffer),
