@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import cv2
 import dlib
+import matplotlib.pyplot as plt
 
 
 def record_sample():
@@ -102,6 +103,11 @@ def create_face_detector():
 
 def rgb_to_gray(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
+def plot_vertical_slice(frames, i_col):
+    plt.imshow(frames[:, :, i_col, ::-1].swapaxes(0, 1))
+    plt.show()
 
 
 def monitor_heart_rate():
