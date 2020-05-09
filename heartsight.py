@@ -1,9 +1,11 @@
 from contextlib import contextmanager
 from datetime import datetime
+
+import matplotlib.pyplot as plt
 import numpy as np
+
 import cv2
 import dlib
-import matplotlib.pyplot as plt
 
 
 def record_sample():
