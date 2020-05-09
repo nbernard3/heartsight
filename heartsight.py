@@ -74,17 +74,22 @@ def extract_face_frames(frames, facebox_width=128):
 
     face_frames_buffer = []
     face_detector = create_face_detector()
-    previous_face_rectangle = None
+    tracker = dlib.correlation_tracker()
+    def face_acquired(): return tracker.get_position() != dlib.drectangle(0, 0, -1, -1)
 
     for frame in frames:
-        detected_faces = face_detector(frame)
-        face_rectangle = detected_faces[0] if detected_faces else previous_face_rectangle
+        if face_acquired():
 
-        if face_rectangle:
-            face_frame = dlib.resize_image(
-                dlib.sub_image(frame, face_rectangle), facebox_width, facebox_width)
+            tracker.update(frame)
+            face_frame = dlib.resize_image(dlib.sub_image(frame, dlib.rectangle(
+                tracker.get_position())), facebox_width, facebox_width)
             face_frames_buffer.append(face_frame)
-            previous_face_rectangle = face_rectangle
+        else:
+
+            detected_faces = face_detector(frame)
+            if detected_faces:
+                face_rectangle = detected_faces[0]
+                tracker.start_track(frame, face_rectangle)
 
     face_frames = np.stack(face_frames_buffer) if face_frames_buffer else None
     return face_frames
