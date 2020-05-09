@@ -3,7 +3,6 @@ from datetime import datetime
 import numpy as np
 import cv2
 import dlib
-import time
 
 
 def record_sample():
@@ -12,7 +11,7 @@ def record_sample():
 
         frames_buffer = []
         exit_requested = False
-        recording_start_time = time.time()
+        recording_start_time = datetime.now()
 
         while not exit_requested:
 
@@ -21,11 +20,14 @@ def record_sample():
             refresh_display(rgb_frame)
             exit_requested = detect_q_key_pressed()
 
-        recording_end_time = time.time()
+        recording_end_time = datetime.now()
+        elapsed_time = (recording_end_time -
+                        recording_start_time).total_seconds()
 
     return {
+        'start_time': recording_start_time,
         'frames': np.stack(frames_buffer),
-        'fps':  np.float(len(frames_buffer))/(recording_end_time - recording_start_time)
+        'fps':  np.float(len(frames_buffer))/elapsed_time
     }
 
 
