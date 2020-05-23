@@ -18,3 +18,29 @@ Vision-based Heart Rate Monitoring
 |----|--------|-----------|
 |Acquisition|Enough time to capture a few heartbeats|Frame-by-frame recording of the image w/o any processing to have the highest FPS as possible|
 |Sequence processing|TBD|Sequence processing to estimate heart-rate value|
+
+## Pi setup
+
+### Steps to have headless working raspberry pi
+
+1. Install raspbian-lite distrib
+2. In the boot folder, copy/paste the following files:
+
+* *ssh* (emptyp file) enables ssh connection (otherwise blocked)
+* *wpa_supplicant.conf* is for WiFi connection setup
+
+### Steps to enable camera
+
+1. Plug-in the camera module
+2. In *sudo raspi-config*, enable camera usage
+3. Test taking a picture using *raspistill -o test.jpg*
+
+### Steps to install jupyter
+
+1. install pip3 *sudo apt install python3-pip*
+2. install jupyter *sudo pip3 install jupyter*
+3. Create jupyter config *jupyter notebook --generate-config*
+4. Listen to all ip: *c.NotebookApp.ip = '*'*
+5. Disable browser launching: *c.NotebookApp.open_browser = False*
+6. Set a port to listen on: *c.NotebookApp.port = 5555*
+7. Install matplotlib, numpy
