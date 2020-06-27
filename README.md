@@ -44,3 +44,8 @@ Vision-based Heart Rate Monitoring
 5. Disable browser launching: *c.NotebookApp.open_browser = False*
 6. Set a port to listen on: *c.NotebookApp.port = 5555*
 7. Install matplotlib, numpy
+
+### Steps to read pulse sensor from rpi
+
+1. install spidev through pip3
+2. Enable SPI interface in raspi-config
